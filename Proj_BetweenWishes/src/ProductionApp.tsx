@@ -137,6 +137,40 @@ function AuthScreen({ client }: {client: SupabaseClient}) {
           {message && <p role="status" className="bw-alert bw-success">{message}</p>}
           <button className="bw-primary bw-full" disabled={working} type="submit">{working ? "处理中…" : mode === "login" ? "登录" : mode === "register" ? "注册" : "发送重置邮件"} <ChevronRight size={16} /></button>
         </form>
+        {mode === "register" && (
+  <button
+    type="button"
+    className="bw-secondary bw-full"
+    disabled={working || !email.trim()}
+    onClick={async () => {
+      setWorking(true);
+      setError("");
+      setMessage("");
+
+      try {
+        const { error } = await client.auth.resend({
+          type: "signup",
+          email: email.trim().toLowerCase(),
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
+        });
+
+        if (error) throw error;
+
+        setMessage("重发请求已提交，请检查邮箱。");
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "重发失败"
+        );
+      } finally {
+        setWorking(false);
+      }
+    }}
+  >
+    重新发送验证邮件
+  </button>
+)}
         <div className="bw-auth-actions">
           {mode === "login" ? <>
             <button onClick={() => {setMode("register");setError("");setMessage("");}}>还没有账号？注册</button>
