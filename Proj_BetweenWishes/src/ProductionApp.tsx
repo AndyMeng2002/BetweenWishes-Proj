@@ -423,15 +423,52 @@ function AuthenticatedApp({client,user}:{client:SupabaseClient;user:AuthUser}) {
     },"个人资料已保存");
   }
 
-  async function deleteAccount(){
-    if(deleteConfirm!=="删除我的账号") {setProblem("请输入完整的确认文字");return;}
-    if(!user.email){setProblem("账号没有邮箱，请联系管理员处理");return;}
-    await act(async()=>{
-      check(await client.auth.signInWithPassword({email:user.email!,password:deletePassword}));
-      const result=await client.functions.invoke("delete-account",{body:{confirm:"DELETE_MY_ACCOUNT"}});
-      check(result);
+  async function deleteAccount() {
+    if (deleteConfirm !== "删除我的账号") {
+      setProblem("请输入完整的确认文字");
+      return;
+    }
+    if (!deletePassword) {
+      setProblem("请输入当前账号的登录密码");
+      return;
+    }
+
+    setBusy(true);
+    setProblem("");
+    setMessage("");
+    try {
+      const { data: { session }, error: sessionError } =
+        await client.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error("登录已过期，请重新登录");
+      }
+      const { error } = await client.functions.invoke("delete-account", {
+        body: {
+          confirm: "DELETE_MY_ACCOUNT",
+          password: deletePassword,
+        },
+      });
+      if (error) {
+        let detail = error.message;
+        try {
+          const response = (error as { context?: Response }).context;
+          if (response) {
+            const payload = await response.json();
+            if (typeof payload?.error === "string") detail = payload.error;
+          }
+        } catch { /* Keep the original error text. */ }
+        throw new Error(detail);
+      }
+
       await client.auth.signOut();
-    },"账号已删除");
+      setDeletePassword("");
+      setDeleteConfirm("");
+      setDeleteMode(false);
+    } catch (error) {
+      setProblem(friendlyError(error));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function exportMyData() {
