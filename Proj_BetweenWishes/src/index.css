@@ -1,0 +1,13 @@
+:root {
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #3c3441;
+  background: #fdf9f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+html { min-width: 320px; scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; }
+button, input, select, textarea { font-family: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible {outline: 3px solid #e3a0b3;outline-offset: 3px}
+::selection { background: #f5cbd6; }
